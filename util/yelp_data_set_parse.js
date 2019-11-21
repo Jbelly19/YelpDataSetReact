@@ -23,7 +23,6 @@ fs.createReadStream('business.json')
         business.categories &&
         business.categories.split(', ').includes('Restaurants')
       ) {
-        // console.log(business);
         if (cities.includes(business.city)) {
           if (business.review_count > 100) {
             this.push(JSON.stringify(business) + '\n');
@@ -33,8 +32,4 @@ fs.createReadStream('business.json')
       next();
     })
   )
-  .pipe(fs.createWriteStream('./restaurants.json'))
-  .on('end', () => {
-    console.log('End:');
-    console.log(all);
-  });
+  .pipe(fs.createWriteStream('./restaurants.json'));
