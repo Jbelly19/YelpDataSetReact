@@ -3,27 +3,68 @@ import { BrowserRouter, Route } from 'react-router-dom';
 import RestaurantView from './views/RestaurantView';
 import RestaurantPieChart from './views/RestaurantPieChart';
 import RestaurantTable from './views/RestaurantTable';
-import Header from './Header';
+import Header from './userInterface/Header';
 
-const App = () => {
-  return (
-    <div className="ui container">
-      <BrowserRouter>
-        <Header />
-        <Route path="/" exact component={RestaurantView} />
-        <Route
-          path="/category/percentage"
-          exact
-          component={RestaurantPieChart}
-        />
-        <Route
-          path="/category/highest-rated"
-          exact
-          component={RestaurantTable}
-        />
-      </BrowserRouter>
-    </div>
-  );
-};
+class App extends React.Component {
+  state = { restaurants: [] };
+
+  componentDidMount() {
+    fetch(process.env.PUBLIC_URL + '/restaurants.json')
+      .then(response => response.json())
+      .then(json => {
+        // Create array of unique city names
+        let cityNames = json.data.map(({ city }) => city);
+        let citySet = new Set(cityNames);
+        cityNames = [...citySet];
+
+        // Create array of unique category names
+        let categoryNames = json.data.map(restaurant =>
+          restaurant.categories
+            .split(', ')
+            .filter(item => item !== 'Restaurants')
+        );
+        let categorySet = new Set(categoryNames.flat());
+        categoryNames = [...categorySet];
+
+        this.setState({
+          restaurants: json.data,
+          cities: cityNames,
+          categories: categoryNames
+        });
+      });
+  }
+
+  render() {
+    return (
+      <div className="ui container">
+        <BrowserRouter>
+          <Header />
+          <Route
+            path="/"
+            exact
+            render={props => (
+              <RestaurantView
+                {...props}
+                restaurants={this.state.restaurants}
+                cities={this.state.cities}
+                categories={this.state.categories}
+              />
+            )}
+          />
+          <Route
+            path="/category/percentage"
+            exact
+            component={RestaurantPieChart}
+          />
+          <Route
+            path="/category/highest-rated"
+            exact
+            component={RestaurantTable}
+          />
+        </BrowserRouter>
+      </div>
+    );
+  }
+}
 
 export default App;

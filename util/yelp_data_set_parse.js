@@ -3,16 +3,13 @@ const ndjson = require('ndjson');
 const through = require('through2');
 
 let cities = [
-  'New York City',
-  'Los Angeles',
-  'Chicago',
-  'Houston',
+  'Las Vegas',
+  'Toronto',
+  'Pittsburgh',
   'Phoenix',
-  'Philadelphia',
-  'San Antonio',
-  'San Diego',
-  'Dallas',
-  'San Jose'
+  'Montréal',
+  'Madison',
+  'Dallas'
 ];
 
 fs.createReadStream('business.json')
@@ -24,8 +21,8 @@ fs.createReadStream('business.json')
         business.categories.split(', ').includes('Restaurants')
       ) {
         if (cities.includes(business.city)) {
-          if (business.review_count > 100) {
-            this.push(JSON.stringify(business) + '\n');
+          if (business.review_count > 200) {
+            this.push(JSON.stringify(business) + ',');
           }
         }
       }
