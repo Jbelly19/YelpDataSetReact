@@ -1,9 +1,10 @@
 import React from 'react';
+import { Radio } from 'semantic-ui-react';
 import RestaurantList from './RestaurantList';
 import FilterDropDown from '../userInterface/FilterDropDown';
 
 class RestaurantView extends React.Component {
-  state = { cityFilter: '', categoryFilter: '' };
+  state = { cityFilter: '', categoryFilter: '', sort: false };
 
   onCityChange = (event, data) => {
     this.setState({ cityFilter: data.value });
@@ -11,6 +12,10 @@ class RestaurantView extends React.Component {
 
   onCategoryChange = (event, data) => {
     this.setState({ categoryFilter: data.value });
+  };
+
+  onSortToggle = (event, data) => {
+    this.setState({ sort: data.checked });
   };
 
   render() {
@@ -32,9 +37,22 @@ class RestaurantView extends React.Component {
               search={true}
             />
           </div>
+          <div className="right menu">
+            <div className="item">
+              <div className="ui icon input">
+                <Radio
+                  onChange={this.onSortToggle}
+                  label="Sort by User Rating"
+                  toggle
+                />
+              </div>
+            </div>
+          </div>
         </div>
+
         <div className="ui cards column one">
           <RestaurantList
+            sort={this.state.sort}
             restaurants={this.props.restaurants
               .filter(({ city }) => {
                 if (this.state.cityFilter === '') return true;
