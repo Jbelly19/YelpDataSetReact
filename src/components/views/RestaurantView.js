@@ -8,40 +8,44 @@ class RestaurantView extends React.Component {
     restaurants: [],
     cityFilter: '',
     categoryFilter: '',
-    sort: false,
     activePage: 1,
     restaurantPerPage: 25
   };
 
-  componentDidUpdate = prevProps => {
-    // let this.props.restaurants be the original restaurant list
+  componentDidUpdate = (prevProps, { cityFilter, categoryFilter }) => {
+    // Letting this.props.restaurants be the original restaurant list
     // Not sure if this is breaking conventions, it feels a little wrong
     if (this.props.restaurants !== prevProps.restaurants)
       this.setState({ restaurants: this.props.restaurants });
+
+    // filter the restuarant list if a new city or category is chosen
+    if (
+      this.state.cityFilter !== cityFilter ||
+      this.state.categoryFilter !== categoryFilter
+    )
+      this.setState({ restaurants: this.getFilteredRestaurants() });
   };
 
-  onCityChange = (event, { value }) => {
-    // this seems like bad to use props as source of truth
-    let restaurants = this.props.restaurants
-      .filter(({ city }) => city === value)
-      .filter(({ categories }) => {
-        if (this.state.categoryFilter === '') return true;
-        return categories.split(', ').includes(this.state.categoryFilter);
-      });
-    this.setState({ restaurants });
-  };
-
-  onCategoryChange = (event, { value }) => {
-    // this seems like bad to use props as source of truth
-    let restaurants = this.props.restaurants
+  getFilteredRestaurants = () => {
+    // feels weird using this.props.restaurants as the source of truth
+    // but not sure how to unsort the list otherwise
+    return this.props.restaurants
       .filter(({ city }) => {
         if (this.state.cityFilter === '') return true;
         return city === this.state.cityFilter;
       })
       .filter(({ categories }) => {
-        return categories.split(', ').includes(value);
+        if (this.state.categoryFilter === '') return true;
+        return categories.split(', ').includes(this.state.categoryFilter);
       });
-    this.setState({ restaurants });
+  };
+
+  onCityChange = (event, data) => {
+    this.setState({ cityFilter: data.value });
+  };
+
+  onCategoryChange = (event, data) => {
+    this.setState({ categoryFilter: data.value });
   };
 
   sortByUserRating = (a, b) => {
@@ -50,23 +54,10 @@ class RestaurantView extends React.Component {
   };
 
   onSortToggle = (event, { checked }) => {
-    let restaurants;
+    let restaurants = this.getFilteredRestaurants();
     if (checked) {
-      console.log('checked');
-      restaurants = this.state.restaurants.slice().sort(this.sortByUserRating);
-    } else {
-      console.log('not checkd');
-      restaurants = this.props.restaurants
-        .filter(({ city }) => {
-          if (this.state.cityFilter === '') return true;
-          return city === this.state.cityFilter;
-        })
-        .filter(({ categories }) => {
-          if (this.state.categoryFilter === '') return true;
-          return categories.split(', ').includes(this.state.categoryFilter);
-        });
+      restaurants.sort(this.sortByUserRating);
     }
-
     this.setState({ restaurants });
   };
 
@@ -82,7 +73,7 @@ class RestaurantView extends React.Component {
 
     return this.state.restaurants.slice(
       indexOfFirstRestaurant,
-      indexOfLastRestaurant
+      indexOfLastRestaurant + 1
     );
   };
 
@@ -119,10 +110,7 @@ class RestaurantView extends React.Component {
         </div>
 
         <div className="ui cards column one">
-          <RestaurantList
-            sort={this.state.sort}
-            restaurants={this.getPaginatedRestaurants()}
-          />
+          <RestaurantList restaurants={this.getPaginatedRestaurants()} />
         </div>
         <div className="ui grid centered">
           <Pagination
