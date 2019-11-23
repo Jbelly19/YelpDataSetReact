@@ -1,10 +1,16 @@
 import React from 'react';
-import { Radio } from 'semantic-ui-react';
+import { Radio, Pagination } from 'semantic-ui-react';
 import RestaurantList from './RestaurantList';
 import FilterDropDown from '../userInterface/FilterDropDown';
 
 class RestaurantView extends React.Component {
-  state = { cityFilter: '', categoryFilter: '', sort: false };
+  state = {
+    cityFilter: '',
+    categoryFilter: '',
+    sort: false,
+    activePage: 1,
+    restaurantPerPage: 25
+  };
 
   onCityChange = (event, data) => {
     this.setState({ cityFilter: data.value });
@@ -16,6 +22,18 @@ class RestaurantView extends React.Component {
 
   onSortToggle = (event, data) => {
     this.setState({ sort: data.checked });
+  };
+
+  getPaginatedRestaurants = () => {
+    let indexOfLastRestaurant =
+      this.state.activePage * this.state.restaurantPerPage;
+    let indexOfFirstRestaurant =
+      indexOfLastRestaurant - this.state.restaurantPerPage;
+
+    return this.props.restaurants.slice(
+      indexOfFirstRestaurant,
+      indexOfLastRestaurant
+    );
   };
 
   render() {
@@ -53,7 +71,7 @@ class RestaurantView extends React.Component {
         <div className="ui cards column one">
           <RestaurantList
             sort={this.state.sort}
-            restaurants={this.props.restaurants
+            restaurants={this.getPaginatedRestaurants()
               .filter(({ city }) => {
                 if (this.state.cityFilter === '') return true;
                 return city === this.state.cityFilter;
@@ -63,8 +81,21 @@ class RestaurantView extends React.Component {
                 return categories
                   .split(', ')
                   .includes(this.state.categoryFilter);
-              })
-              .slice(0, 50)}
+              })}
+          />
+        </div>
+        <div className="ui grid centered">
+          <Pagination
+            activePage={this.state.activePage}
+            totalPages={Math.ceil(
+              this.props.restaurants.length / this.state.restaurantPerPage
+            )}
+            boundaryRange={4}
+            ellipsisItem={null}
+            onPageChange={(e, { activePage }) => {
+              console.log(activePage);
+              this.setState({ activePage });
+            }}
           />
         </div>
       </div>
