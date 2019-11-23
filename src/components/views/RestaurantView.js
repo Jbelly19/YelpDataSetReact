@@ -5,6 +5,7 @@ import FilterDropDown from '../userInterface/FilterDropDown';
 
 class RestaurantView extends React.Component {
   state = {
+    restaurants: [],
     cityFilter: '',
     categoryFilter: '',
     sort: false,
@@ -12,25 +13,74 @@ class RestaurantView extends React.Component {
     restaurantPerPage: 25
   };
 
-  onCityChange = (event, data) => {
-    this.setState({ cityFilter: data.value });
+  componentDidUpdate = prevProps => {
+    // let this.props.restaurants be the original restaurant list
+    // Not sure if this is breaking conventions, it feels a little wrong
+    if (this.props.restaurants !== prevProps.restaurants)
+      this.setState({ restaurants: this.props.restaurants });
   };
 
-  onCategoryChange = (event, data) => {
-    this.setState({ categoryFilter: data.value });
+  onCityChange = (event, { value }) => {
+    // this seems like bad to use props as source of truth
+    let restaurants = this.props.restaurants
+      .filter(({ city }) => city === value)
+      .filter(({ categories }) => {
+        if (this.state.categoryFilter === '') return true;
+        return categories.split(', ').includes(this.state.categoryFilter);
+      });
+    this.setState({ restaurants });
   };
 
-  onSortToggle = (event, data) => {
-    this.setState({ sort: data.checked });
+  onCategoryChange = (event, { value }) => {
+    // this seems like bad to use props as source of truth
+    let restaurants = this.props.restaurants
+      .filter(({ city }) => {
+        if (this.state.cityFilter === '') return true;
+        return city === this.state.cityFilter;
+      })
+      .filter(({ categories }) => {
+        return categories.split(', ').includes(value);
+      });
+    this.setState({ restaurants });
+  };
+
+  sortByUserRating = (a, b) => {
+    if (a.stars === b.stars) return b.review_count - a.review_count;
+    return b.stars - a.stars;
+  };
+
+  onSortToggle = (event, { checked }) => {
+    let restaurants;
+    if (checked) {
+      console.log('checked');
+      restaurants = this.state.restaurants.slice().sort(this.sortByUserRating);
+    } else {
+      console.log('not checkd');
+      restaurants = this.props.restaurants
+        .filter(({ city }) => {
+          if (this.state.cityFilter === '') return true;
+          return city === this.state.cityFilter;
+        })
+        .filter(({ categories }) => {
+          if (this.state.categoryFilter === '') return true;
+          return categories.split(', ').includes(this.state.categoryFilter);
+        });
+    }
+
+    this.setState({ restaurants });
   };
 
   getPaginatedRestaurants = () => {
     let indexOfLastRestaurant =
       this.state.activePage * this.state.restaurantPerPage;
+
+    if (indexOfLastRestaurant >= this.state.restaurants.length)
+      indexOfLastRestaurant = this.state.restaurants.length - 1;
+
     let indexOfFirstRestaurant =
       indexOfLastRestaurant - this.state.restaurantPerPage;
 
-    return this.props.restaurants.slice(
+    return this.state.restaurants.slice(
       indexOfFirstRestaurant,
       indexOfLastRestaurant
     );
@@ -71,24 +121,14 @@ class RestaurantView extends React.Component {
         <div className="ui cards column one">
           <RestaurantList
             sort={this.state.sort}
-            restaurants={this.getPaginatedRestaurants()
-              .filter(({ city }) => {
-                if (this.state.cityFilter === '') return true;
-                return city === this.state.cityFilter;
-              })
-              .filter(({ categories }) => {
-                if (this.state.categoryFilter === '') return true;
-                return categories
-                  .split(', ')
-                  .includes(this.state.categoryFilter);
-              })}
+            restaurants={this.getPaginatedRestaurants()}
           />
         </div>
         <div className="ui grid centered">
           <Pagination
             activePage={this.state.activePage}
             totalPages={Math.ceil(
-              this.props.restaurants.length / this.state.restaurantPerPage
+              this.state.restaurants.length / this.state.restaurantPerPage
             )}
             boundaryRange={4}
             ellipsisItem={null}
