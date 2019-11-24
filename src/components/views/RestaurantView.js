@@ -8,28 +8,31 @@ class RestaurantView extends React.Component {
     restaurants: [],
     cityFilter: '',
     categoryFilter: '',
+    sort: false,
     activePage: 1,
     restaurantPerPage: 25
   };
 
-  componentDidUpdate = (prevProps, { cityFilter, categoryFilter }) => {
-    // Letting this.props.restaurants be the original restaurant list
-    // Not sure if this is breaking conventions, it feels a little wrong
+  componentDidMount() {
+    this.setState({ restaurants: this.props.restaurants });
+  }
+
+  componentDidUpdate = (prevProps, { cityFilter, categoryFilter, sort }) => {
+    console.log(this.props);
     if (this.props.restaurants !== prevProps.restaurants)
       this.setState({ restaurants: this.props.restaurants });
 
-    // filter the restuarant list if a new city or category is chosen
+    // Update the current list of restaurants on sort/filter change
     if (
       this.state.cityFilter !== cityFilter ||
-      this.state.categoryFilter !== categoryFilter
+      this.state.categoryFilter !== categoryFilter ||
+      this.state.sort !== sort
     )
-      this.setState({ restaurants: this.getFilteredRestaurants() });
+      this.setState({ restaurants: this.getCurrentRestaurants() });
   };
 
-  getFilteredRestaurants = () => {
-    // feels weird using this.props.restaurants as the source of truth
-    // but not sure how to unsort the list otherwise
-    return this.props.restaurants
+  getCurrentRestaurants = () => {
+    let restaurants = this.props.restaurants
       .filter(({ city }) => {
         if (this.state.cityFilter === '') return true;
         return city === this.state.cityFilter;
@@ -38,27 +41,27 @@ class RestaurantView extends React.Component {
         if (this.state.categoryFilter === '') return true;
         return categories.split(', ').includes(this.state.categoryFilter);
       });
+
+    return this.state.sort
+      ? restaurants.sort(this.sortByUserRating)
+      : restaurants;
   };
 
-  onCityChange = (event, data) => {
-    this.setState({ cityFilter: data.value });
+  onCityChange = (event, { value }) => {
+    this.setState({ cityFilter: value });
   };
 
-  onCategoryChange = (event, data) => {
-    this.setState({ categoryFilter: data.value });
+  onCategoryChange = (event, { value }) => {
+    this.setState({ categoryFilter: value });
+  };
+
+  onSortToggle = (event, { checked }) => {
+    this.setState({ sort: checked });
   };
 
   sortByUserRating = (a, b) => {
     if (a.stars === b.stars) return b.review_count - a.review_count;
     return b.stars - a.stars;
-  };
-
-  onSortToggle = (event, { checked }) => {
-    let restaurants = this.getFilteredRestaurants();
-    if (checked) {
-      restaurants.sort(this.sortByUserRating);
-    }
-    this.setState({ restaurants });
   };
 
   getPaginatedRestaurants = () => {
@@ -93,7 +96,6 @@ class RestaurantView extends React.Component {
               options={this.props.categories}
               text={'Category'}
               onChange={this.onCategoryChange}
-              search={true}
             />
           </div>
           <div className="right menu">

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Dropdown } from 'semantic-ui-react';
 
-const FilterDropDown = ({ options = [], text, onChange, search = false }) => {
+const FilterDropDown = ({ options = [], text, onChange }) => {
   options = options.map(option => ({
     key: option,
     text: option,

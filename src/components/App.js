@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Route } from 'react-router-dom';
 import RestaurantView from './views/RestaurantView';
-import RestaurantPieChart from './views/RestaurantPieChart';
+import CategoryView from './views/CategoryView';
 import RestaurantTable from './views/RestaurantTable';
 import Header from './userInterface/Header';
 
@@ -54,7 +54,14 @@ class App extends React.Component {
           <Route
             path="/category/percentage"
             exact
-            component={RestaurantPieChart}
+            render={props => (
+              <CategoryView
+                {...props}
+                restaurants={this.state.restaurants}
+                cities={this.state.cities}
+                categories={this.state.categories}
+              />
+            )}
           />
           <Route
             path="/category/highest-rated"
