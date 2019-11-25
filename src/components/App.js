@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter, Route } from 'react-router-dom';
 import RestaurantView from './views/RestaurantView';
 import CategoryView from './views/CategoryView';
-import RestaurantTable from './views/RestaurantTable';
+import CityTableView from './views/CityTableView';
 import Header from './userInterface/Header';
 
 class App extends React.Component {
@@ -66,7 +66,14 @@ class App extends React.Component {
           <Route
             path="/category/highest-rated"
             exact
-            component={RestaurantTable}
+            render={props => (
+              <CityTableView
+                {...props}
+                restaurants={this.state.restaurants}
+                cities={this.state.cities}
+                categories={this.state.categories}
+              />
+            )}
           />
         </BrowserRouter>
       </div>
